@@ -4,4 +4,13 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "fastrtc>=0.0.34",
+    "openai-whisper>=20250625",
+    "typer>=0.21.0",
+]
+
+[dependency-groups]
+dev = [
+    "typer>=0.21.0",
+]
