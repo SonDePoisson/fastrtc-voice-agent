@@ -5,7 +5,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "fastrtc>=0.0.34",
+    "fastrtc[vad]>=0.0.34",
+    "ollama>=0.6.1",
     "openai-whisper>=20250625",
     "typer>=0.21.0",
 ]
