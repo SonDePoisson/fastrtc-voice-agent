@@ -1,13 +1,16 @@
 from fastrtc import ReplyOnPause, Stream
 import numpy as np
+from numpy.typing import NDArray
 from whisper import load_model, load_audio, Whisper
 import ollama
 import librosa
 import edge_tts
 import asyncio
 import io
+import re
 from pydub import AudioSegment
 from typing import Generator, AsyncGenerator
+from dataclasses import dataclass
 
 STT_MODEL = "small"
 OLLAMA_MODEL = "ministral-3"
@@ -31,62 +34,80 @@ class STTModel:
         return load_audio(path)
 
 
-class TTSModel:
+@dataclass
+class EdgeTTSOptions:
+    voice: str = TTS_VOICE
+    rate: str = "+0%"
+    pitch: str = "+0Hz"
+
+
+class EdgeTTSModel:
     SAMPLE_RATE = 24000
-    CHUNK_SIZE = 4800  # 200ms chunks at 24kHz
 
     def __init__(self, voice: str = TTS_VOICE):
         self.voice = voice
 
-    def _decode_mp3(self, mp3_bytes: bytes) -> np.ndarray:
-        """Decode MP3 bytes to numpy array at 24kHz mono."""
+    def _decode_mp3(self, mp3_bytes: bytes) -> NDArray[np.float32]:
+        """Decode MP3 bytes to numpy array at 24kHz mono float32."""
         audio = AudioSegment.from_mp3(io.BytesIO(mp3_bytes))
         audio = audio.set_frame_rate(self.SAMPLE_RATE).set_channels(1)
-        samples = np.array(audio.get_array_of_samples(), dtype=np.int16)
-        return samples
+        return np.array(audio.get_array_of_samples(), dtype=np.float32) / 32768.0
 
-    def tts(self, text: str) -> tuple[int, np.ndarray]:
-        """Generate complete audio from text."""
-
-        async def _generate():
-            communicate = edge_tts.Communicate(text, self.voice)
-            audio_bytes = b""
-            async for chunk in communicate.stream():
-                if chunk["type"] == "audio":
-                    audio_bytes += chunk["data"]
-            return audio_bytes
-
-        mp3_bytes = asyncio.run(_generate())
-        audio = self._decode_mp3(mp3_bytes)
-        return (self.SAMPLE_RATE, audio)
-
-    async def stream_tts(self, text: str) -> AsyncGenerator[tuple[int, np.ndarray], None]:
-        """Async generator yielding audio chunks."""
-        communicate = edge_tts.Communicate(text, self.voice)
+    async def _generate_sentence(self, text: str, options: EdgeTTSOptions) -> bytes:
+        """Generate audio bytes for a single sentence."""
+        communicate = edge_tts.Communicate(text, options.voice, rate=options.rate, pitch=options.pitch)
         audio_bytes = b""
         async for chunk in communicate.stream():
             if chunk["type"] == "audio":
                 audio_bytes += chunk["data"]
+        return audio_bytes
 
-        audio = self._decode_mp3(audio_bytes)
-        for i in range(0, len(audio), self.CHUNK_SIZE):
-            yield (self.SAMPLE_RATE, audio[i : i + self.CHUNK_SIZE])
+    def tts(self, text: str, options: EdgeTTSOptions | None = None) -> tuple[int, NDArray[np.float32]]:
+        """Generate complete audio from text."""
+        options = options or EdgeTTSOptions(voice=self.voice)
+        loop = asyncio.new_event_loop()
+        try:
+            audio_bytes = loop.run_until_complete(self._generate_sentence(text, options))
+            return self.SAMPLE_RATE, self._decode_mp3(audio_bytes)
+        finally:
+            loop.close()
 
-    def stream_tts_sync(self, text: str) -> Generator[tuple[int, np.ndarray], None, None]:
+    async def stream_tts(
+        self, text: str, options: EdgeTTSOptions | None = None
+    ) -> AsyncGenerator[tuple[int, NDArray[np.float32]], None]:
+        """Async generator yielding audio chunks per sentence for lower latency."""
+        options = options or EdgeTTSOptions(voice=self.voice)
+
+        # Split by sentences for faster first-chunk delivery
+        sentences = re.split(r"(?<=[.!?])\s+", text.strip())
+
+        for sentence in sentences:
+            if not sentence.strip():
+                continue
+
+            # Generate and decode audio for this sentence
+            audio_bytes = await self._generate_sentence(sentence, options)
+            audio = self._decode_mp3(audio_bytes)
+
+            # Yield in chunks
+            chunk_size = self.SAMPLE_RATE // 5  # 200ms chunks
+            for i in range(0, len(audio), chunk_size):
+                yield self.SAMPLE_RATE, audio[i : i + chunk_size]
+
+    def stream_tts_sync(
+        self, text: str, options: EdgeTTSOptions | None = None
+    ) -> Generator[tuple[int, NDArray[np.float32]], None, None]:
         """Sync generator yielding audio chunks."""
-
-        async def _collect():
-            communicate = edge_tts.Communicate(text, self.voice)
-            audio_bytes = b""
-            async for chunk in communicate.stream():
-                if chunk["type"] == "audio":
-                    audio_bytes += chunk["data"]
-            return audio_bytes
-
-        mp3_bytes = asyncio.run(_collect())
-        audio = self._decode_mp3(mp3_bytes)
-        for i in range(0, len(audio), self.CHUNK_SIZE):
-            yield (self.SAMPLE_RATE, audio[i : i + self.CHUNK_SIZE])
+        loop = asyncio.new_event_loop()
+        iterator = self.stream_tts(text, options).__aiter__()
+        try:
+            while True:
+                try:
+                    yield loop.run_until_complete(iterator.__anext__())
+                except StopAsyncIteration:
+                    break
+        finally:
+            loop.close()
 
 
 def response(audio: tuple[int, np.ndarray]):
@@ -100,7 +121,7 @@ def response(audio: tuple[int, np.ndarray]):
 
 
 stt_model = STTModel()
-tts_model = TTSModel()
+tts_model = EdgeTTSModel()
 
 stream = Stream(ReplyOnPause(response), modality="audio", mode="send-receive")
 
