@@ -2,6 +2,7 @@ from fastrtc import ReplyOnPause, Stream
 import numpy as np
 from numpy.typing import NDArray
 from whisper import load_model, load_audio, Whisper
+from faster_whisper import WhisperModel
 import ollama
 import librosa
 import edge_tts
@@ -13,11 +14,11 @@ from typing import Generator, AsyncGenerator
 from dataclasses import dataclass
 
 STT_MODEL = "small"
-OLLAMA_MODEL = "ministral-3"
+OLLAMA_MODEL = "llama3.2:3b"
 TTS_VOICE = "en-US-AvaMultilingualNeural"
 
 
-class STTModel:
+class WhisperSTTModel:
     def __init__(self):
         self.model: Whisper = load_model(name=STT_MODEL, device="cpu")
 
@@ -32,6 +33,27 @@ class STTModel:
 
     def load_audio(self, path: str) -> np.ndarray:
         return load_audio(path)
+
+
+class FasterWhisperSTTModel:
+    """Fast STT using faster_whisper (CTranslate2 based, ~4x faster than OpenAI whisper)."""
+
+    def __init__(self, model_size: str = STT_MODEL, device: str = "auto"):
+        # device: "auto", "cpu", "cuda", "mps"
+        compute_type = "int8" if device == "cpu" else "float16"
+        self.model = WhisperModel(model_size, device=device, compute_type=compute_type)
+
+    def stt(self, audio: np.ndarray, sample_rate: int = 48000) -> str:
+        # Convert to float32 and normalize to [-1, 1]
+        audio = audio.astype(np.float32).flatten() / 32768.0
+
+        # Resample to 16kHz if needed
+        if sample_rate != 16000:
+            audio = librosa.resample(audio, orig_sr=sample_rate, target_sr=16000)
+
+        # Transcribe
+        segments, _ = self.model.transcribe(audio, beam_size=5)
+        return "".join(segment.text for segment in segments)
 
 
 @dataclass
@@ -120,7 +142,7 @@ def response(audio: tuple[int, np.ndarray]):
         yield audio_chunk
 
 
-stt_model = STTModel()
+stt_model = FasterWhisperSTTModel()
 tts_model = EdgeTTSModel()
 
 stream = Stream(ReplyOnPause(response), modality="audio", mode="send-receive")

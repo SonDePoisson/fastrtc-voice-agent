@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "edge-tts>=7.2.7",
+    "faster-whisper>=1.2.1",
     "fastrtc[vad]>=0.0.34",
     "kokoro-onnx>=0.4.9",
     "ollama>=0.6.1",
