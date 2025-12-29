@@ -97,6 +97,21 @@ For more information, visit: https://github.com/SonDePoisson/voice-agent
     )
 
     parser.add_argument(
+        "--model-size",
+        type=str,
+        choices=["tiny", "base", "small", "medium", "large-v3", "turbo"],
+        help="Model size for STT (default: small)",
+    )
+
+    parser.add_argument(
+        "--device",
+        "-d",
+        type=str,
+        choices=["cpu", "cuda"],
+        help="Device for STT (default: cpu)",
+    )
+
+    parser.add_argument(
         "--voice",
         "-v",
         type=str,
@@ -133,18 +148,28 @@ For more information, visit: https://github.com/SonDePoisson/voice-agent
 
         from . import create_agent, AgentConfig, STTConfig, TTSConfig, LLMConfig
 
+        # Resolve actual values from defaults
+        stt_defaults = STT_BACKENDS[args.stt]
+        tts_defaults = TTS_BACKENDS[args.tts]
+        llm_defaults = LLM_BACKENDS[args.llm]
+
+        model_size = args.model_size or stt_defaults["default_model"]
+        device = args.device or stt_defaults["default_device"]
+        voice = args.voice or tts_defaults["default_voice"]
+        model = args.model or llm_defaults["default_model"]
+
         config = AgentConfig(
             system_prompt=args.system_prompt or "You are a helpful voice assistant.",
             system_prompt_file=args.system_prompt_file,
-            stt=STTConfig(backend=args.stt),
-            tts=TTSConfig(backend=args.tts, voice=args.voice),
-            llm=LLMConfig(backend=args.llm, model=args.model),
+            stt=STTConfig(backend=args.stt, model_size=model_size, device=device),
+            tts=TTSConfig(backend=args.tts, voice=voice),
+            llm=LLMConfig(backend=args.llm, model=model),
         )
 
         print("Starting voice agent with:")
-        print(f"  STT: {args.stt}")
-        print(f"  TTS: {args.tts} (voice: {args.voice or 'default'})")
-        print(f"  LLM: {args.llm} (model: {args.model or 'default'})")
+        print(f"  STT: {args.stt} (model: {model_size}, device: {device})")
+        print(f"  TTS: {args.tts} (voice: {voice})")
+        print(f"  LLM: {args.llm} (model: {model})")
         print()
 
         agent = create_agent(config)

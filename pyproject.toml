@@ -41,6 +41,9 @@ all = [
     "fastrtc-voice-agent[whisper,faster-whisper,edge-tts,ollama,claude,fastrtc]",
 ]
 
+[project.scripts]
+fastrtc-voice-agent = "voice_agent.cli:main"
+
 [project.urls]
 Repository = "https://github.com/SonDePoisson/voice-agent"
 
