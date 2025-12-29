@@ -8,7 +8,33 @@ A modular voice agent built on [FastRTC](https://github.com/gradio-app/fastrtc)
 pip install fastrtc-voice-agent
 ```
 
-## Example
+Please install your desired STT and LLM with (for example) :
+
+```bash
+pip install "fastrtc-voice-agent[ollama]"
+```
+
+or for all optional dependancies :
+
+```bash
+pip install "fastrtc-voice-agent[all]"
+```
+
+## CLI Usage Example
+
+For default config :
+
+```bash
+fastrtc-voice-agent --run
+```
+
+Please refere to the help for custom config :
+
+```bash
+fastrtc-voice-agent --help
+```
+
+## Python Usage Example
 
 ```python
 from fastrtc import ReplyOnPause, Stream
@@ -31,3 +57,7 @@ stream = Stream(
 
 stream.ui.launch()
 ```
+
+## Note
+
+To use Anthropic API (may be OpenAI or else later) please copy .env.example as .env file and fill it with your API KEY and the desired model
