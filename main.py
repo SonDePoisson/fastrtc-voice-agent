@@ -36,12 +36,13 @@ class WhisperSTTModel:
 
 
 class FasterWhisperSTTModel:
-    """Fast STT using faster_whisper (CTranslate2 based, ~4x faster than OpenAI whisper)."""
+    """Fast STT using faster_whisper"""
 
     def __init__(self, model_size: str = STT_MODEL, device: str = "auto"):
-        # device: "auto", "cpu", "cuda", "mps"
-        compute_type = "int8" if device == "cpu" else "float16"
+        # device: "cpu" or "cuda"
+        compute_type = "float16" if device == "cuda" else "int8"
         self.model = WhisperModel(model_size, device=device, compute_type=compute_type)
+        print(self.model)
 
     def stt(self, audio: np.ndarray, sample_rate: int = 48000) -> str:
         # Convert to float32 and normalize to [-1, 1]
@@ -132,14 +133,41 @@ class EdgeTTSModel:
             loop.close()
 
 
+def stream_sentences(text_generator) -> Generator[str, None, None]:
+    """Buffer streamed tokens and yield complete sentences."""
+    buffer = ""
+    for chunk in text_generator:
+        buffer += chunk.response
+        # Check for sentence endings
+        while True:
+            match = re.search(r"[.!?]\s*", buffer)
+            if match:
+                sentence = buffer[: match.end()].strip()
+                buffer = buffer[match.end() :]
+                if sentence:
+                    yield sentence
+            else:
+                break
+    # Yield remaining text
+    if buffer.strip():
+        yield buffer.strip()
+
+
 def response(audio: tuple[int, np.ndarray]):
     sample_rate, audio_data = audio
     user_prompt = stt_model.stt(audio_data, sample_rate)
     print(f"User: {user_prompt}")
-    ollama_response = ollama.generate(model=OLLAMA_MODEL, prompt=user_prompt)
-    print(f"Assistant: {ollama_response.response}")
-    for audio_chunk in tts_model.stream_tts_sync(ollama_response.response):
-        yield audio_chunk
+
+    # Stream Ollama response and TTS sentence by sentence
+    text_stream = ollama.generate(model=OLLAMA_MODEL, prompt=user_prompt, stream=True)
+
+    print("Assistant: ", end="", flush=True)
+    for sentence in stream_sentences(text_stream):
+        print(sentence, end=" ", flush=True)
+        # Generate TTS for this sentence immediately
+        for audio_chunk in tts_model.stream_tts_sync(sentence):
+            yield audio_chunk
+    print()  # Newline after complete response
 
 
 stt_model = FasterWhisperSTTModel()
