@@ -2,7 +2,7 @@
 
 from fastrtc import ReplyOnPause, Stream
 
-from src.voice_agent import create_agent, AgentConfig, STTConfig, TTSConfig, LLMConfig
+from voice_agent import create_agent, AgentConfig, STTConfig, TTSConfig, LLMConfig
 
 
 # Configuration

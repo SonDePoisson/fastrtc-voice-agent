@@ -2,14 +2,14 @@
 
 from .tts import (
     TTSBackend,
-    TTSOptions,
+    EdgeTTSOptions,
     EdgeTTSBackend,
     create_tts_backend,
 )
 
 __all__ = [
     "TTSBackend",
-    "TTSOptions",
+    "EdgeTTSOptions",
     "EdgeTTSBackend",
     "create_tts_backend",
 ]
