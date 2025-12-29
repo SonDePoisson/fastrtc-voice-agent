@@ -25,6 +25,9 @@ dependencies = [
     "fastrtc[vad]>=0.0.34",
     "pip>=25.3",
     "twine>=6.2.0",
+    "anthropic>=0.40.0",
+    "python-dotenv>=1.0.0",
+    "dotenv>=0.9.9",
 ]
 
 [project.optional-dependencies]
@@ -32,9 +35,10 @@ whisper = ["openai-whisper>=20250625"]
 faster-whisper = ["faster-whisper>=1.2.1"]
 edge-tts = ["edge-tts>=7.2.7", "pydub>=0.25.1"]
 ollama = ["ollama>=0.6.1"]
+claude = ["anthropic>=0.40.0", "python-dotenv>=1.0.0"]
 fastrtc = ["fastrtc[vad]>=0.0.34"]
 all = [
-    "fastrtc-voice-agent[whisper,faster-whisper,edge-tts,ollama,fastrtc]",
+    "fastrtc-voice-agent[whisper,faster-whisper,edge-tts,ollama,claude,fastrtc]",
 ]
 
 [project.urls]

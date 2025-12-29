@@ -18,8 +18,8 @@ config = AgentConfig(
         voice="en-US-AvaMultilingualNeural",
     ),
     llm=LLMConfig(
-        backend="ollama",
-        model="llama3.2:3b",
+        backend="claude",
+        model=None,
     ),
 )
 
