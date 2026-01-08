@@ -756,7 +756,6 @@ dependencies = [
 all = [
     { name = "anthropic" },
     { name = "groq" },
-    { name = "ollama" },
     { name = "openai-whisper" },
     { name = "python-dotenv" },
     { name = "uvicorn" },
@@ -770,9 +769,6 @@ claude = [
 ]
 groq = [
     { name = "groq" },
-]
-ollama = [
-    { name = "ollama" },
 ]
 whisper = [
     { name = "openai-whisper" },
@@ -793,13 +789,12 @@ requires-dist = [
     { name = "edge-tts", specifier = ">=7.2.7" },
     { name = "faster-whisper", specifier = ">=1.2.1" },
     { name = "fastrtc", extras = ["vad"], specifier = ">=0.0.34" },
-    { name = "fastrtc-voice-agent", extras = ["whisper", "groq", "ollama", "claude", "api"], marker = "extra == 'all'" },
+    { name = "fastrtc-voice-agent", extras = ["whisper", "groq", "claude", "api"], marker = "extra == 'all'" },
     { name = "groq", specifier = ">=1.0.0" },
     { name = "groq", marker = "extra == 'groq'", specifier = ">=0.11.0" },
     { name = "librosa", specifier = ">=0.10" },
     { name = "numpy", specifier = ">=1.24" },
     { name = "ollama", specifier = ">=0.6.1" },
-    { name = "ollama", marker = "extra == 'ollama'", specifier = ">=0.6.1" },
     { name = "openai-whisper", marker = "extra == 'whisper'", specifier = ">=20250625" },
     { name = "pip", specifier = ">=25.3" },
     { name = "pydub", specifier = ">=0.25.1" },
@@ -808,7 +803,7 @@ requires-dist = [
     { name = "twine", specifier = ">=6.2.0" },
     { name = "uvicorn", marker = "extra == 'api'", specifier = ">=0.30.0" },
 ]
-provides-extras = ["whisper", "groq", "ollama", "claude", "api", "all"]
+provides-extras = ["whisper", "groq", "claude", "api", "all"]
 
 [package.metadata.requires-dev]
 dev = [
