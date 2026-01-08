@@ -759,6 +759,10 @@ all = [
     { name = "ollama" },
     { name = "openai-whisper" },
     { name = "python-dotenv" },
+    { name = "uvicorn" },
+]
+api = [
+    { name = "uvicorn" },
 ]
 claude = [
     { name = "anthropic" },
@@ -789,7 +793,7 @@ requires-dist = [
     { name = "edge-tts", specifier = ">=7.2.7" },
     { name = "faster-whisper", specifier = ">=1.2.1" },
     { name = "fastrtc", extras = ["vad"], specifier = ">=0.0.34" },
-    { name = "fastrtc-voice-agent", extras = ["whisper", "groq", "ollama", "claude"], marker = "extra == 'all'" },
+    { name = "fastrtc-voice-agent", extras = ["whisper", "groq", "ollama", "claude", "api"], marker = "extra == 'all'" },
     { name = "groq", specifier = ">=1.0.0" },
     { name = "groq", marker = "extra == 'groq'", specifier = ">=0.11.0" },
     { name = "librosa", specifier = ">=0.10" },
@@ -802,8 +806,9 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "python-dotenv", marker = "extra == 'claude'", specifier = ">=1.0.0" },
     { name = "twine", specifier = ">=6.2.0" },
+    { name = "uvicorn", marker = "extra == 'api'", specifier = ">=0.30.0" },
 ]
-provides-extras = ["whisper", "groq", "ollama", "claude", "all"]
+provides-extras = ["whisper", "groq", "ollama", "claude", "api", "all"]
 
 [package.metadata.requires-dev]
 dev = [

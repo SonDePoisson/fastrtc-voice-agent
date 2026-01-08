@@ -132,6 +132,27 @@ For more information, visit: https://github.com/SonDePoisson/voice-agent
         help="Path to file containing system prompt",
     )
 
+    parser.add_argument(
+        "--api",
+        action="store_true",
+        help="Run as API server without Gradio UI (exposes WebRTC endpoints)",
+    )
+
+    parser.add_argument(
+        "--port",
+        "-p",
+        type=int,
+        default=8000,
+        help="Port for API server (default: 8000, only used with --api)",
+    )
+
+    parser.add_argument(
+        "--host",
+        type=str,
+        default="0.0.0.0",
+        help="Host for API server (default: 0.0.0.0, only used with --api)",
+    )
+
     args = parser.parse_args()
 
     # If no arguments provided, show help
@@ -176,13 +197,25 @@ For more information, visit: https://github.com/SonDePoisson/voice-agent
         print(f"  LLM: {args.llm} (model: {model})")
         print()
 
-        agent = create_agent(config)
-        stream = Stream(
-            ReplyOnPause(agent.create_fastrtc_handler()),
-            modality="audio",
-            mode="send-receive",
-        )
-        stream.ui.launch()
+        if args.api:
+            import uvicorn
+            from .server import create_api_server
+
+            app = create_api_server(config)
+            print(f"\nAPI server running at http://{args.host}:{args.port}")
+            print("Endpoints:")
+            print(f"  POST http://{args.host}:{args.port}/webrtc/offer")
+            print(f"  WS   ws://{args.host}:{args.port}/websocket/offer")
+            print()
+            uvicorn.run(app, host=args.host, port=args.port)
+        else:
+            agent = create_agent(config)
+            stream = Stream(
+                ReplyOnPause(agent.create_fastrtc_handler()),
+                modality="audio",
+                mode="send-receive",
+            )
+            stream.ui.launch()
         return 0
 
     # If no action specified

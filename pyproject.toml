@@ -36,8 +36,9 @@ whisper = ["openai-whisper>=20250625"]
 groq = ["groq>=0.11.0"]
 ollama = ["ollama>=0.6.1"]
 claude = ["anthropic>=0.40.0", "python-dotenv>=1.0.0"]
+api = ["uvicorn>=0.30.0"]
 all = [
-    "fastrtc-voice-agent[whisper,groq,ollama,claude]",
+    "fastrtc-voice-agent[whisper,groq,ollama,claude,api]",
 ]
 
 [project.scripts]

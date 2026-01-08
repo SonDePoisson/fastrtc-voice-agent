@@ -26,6 +26,7 @@ from .config import (
 from .stt import create_stt_backend, STTBackend
 from .tts import create_tts_backend, TTSBackend
 from .llm import create_llm_backend, LLMBackend
+from .server import create_api_server
 
 
 def create_agent(config: AgentConfig | None = None) -> VoiceAgent:
@@ -60,6 +61,7 @@ __all__ = [
     # Main classes
     "VoiceAgent",
     "create_agent",
+    "create_api_server",
     # Types
     "AudioData",
     "ConversationMessage",
