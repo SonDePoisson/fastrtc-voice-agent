@@ -17,7 +17,8 @@ def print_backends() -> None:
         print(f"  {name}")
         print(f"    Description: {info['description']}")
         print(f"    Default model: {info['default_model']}")
-        print(f"    Default device: {info['default_device']}")
+        if "default_device" in info:
+            print(f"    Default device: {info['default_device']}")
         print()
 
     print("=== Text-to-Speech (TTS) Backends ===\n")
@@ -154,7 +155,7 @@ For more information, visit: https://github.com/SonDePoisson/voice-agent
         llm_defaults = LLM_BACKENDS[args.llm]
 
         model_size = args.model_size or stt_defaults["default_model"]
-        device = args.device or stt_defaults["default_device"]
+        device = args.device or stt_defaults.get("default_device")
         voice = args.voice or tts_defaults["default_voice"]
         model = args.model or llm_defaults["default_model"]
 
@@ -167,7 +168,10 @@ For more information, visit: https://github.com/SonDePoisson/voice-agent
         )
 
         print("Starting voice agent with:")
-        print(f"  STT: {args.stt} (model: {model_size}, device: {device})")
+        if device:
+            print(f"  STT: {args.stt} (model: {model_size}, device: {device})")
+        else:
+            print(f"  STT: {args.stt} (model: {model_size})")
         print(f"  TTS: {args.tts} (voice: {voice})")
         print(f"  LLM: {args.llm} (model: {model})")
         print()

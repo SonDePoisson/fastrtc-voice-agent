@@ -6,7 +6,7 @@ from typing import Literal
 
 
 # Backend type definitions for IDE autocompletion
-STTBackendType = Literal["whisper", "faster_whisper"]
+STTBackendType = Literal["whisper", "faster_whisper", "groq"]
 TTSBackendType = Literal["edge"]
 LLMBackendType = Literal["ollama", "claude"]
 
@@ -61,6 +61,10 @@ STT_BACKENDS: dict[str, dict] = {
         "description": "Faster Whisper - CTranslate2 based, ~4x faster",
         "default_model": "small",
         "default_device": "cpu",
+    },
+    "groq": {
+        "description": "Groq Whisper - Cloud API, very fast (requires GROQ_API_KEY)",
+        "default_model": "whisper-large-v3-turbo",
     },
 }
 
