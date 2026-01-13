@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal
+from typing import Any, Callable, Literal
 
 
 # Backend type definitions for IDE autocompletion
@@ -152,6 +152,9 @@ class LLMConfig:
 
     backend: LLMBackendType
     model: ClaudeModel | OllamaModel | str | None = None  # str allows Ollama models
+    tools: list[dict] | None = None  # Tools for Claude tool use
+    execute_tool: Callable[[Any, str, dict], str] | None = None  # Tool executor function
+    max_tool_iterations: int = 10  # Max tool use iterations
 
 
 @dataclass

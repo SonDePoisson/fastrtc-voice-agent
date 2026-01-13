@@ -52,6 +52,9 @@ def create_agent(config: AgentConfig | None = None) -> VoiceAgent:
     llm = create_llm_backend(
         backend=config.llm.backend,
         model=config.llm.model,
+        tools=config.llm.tools,
+        execute_tool=config.llm.execute_tool,
+        max_tool_iterations=config.llm.max_tool_iterations,
     )
 
     return VoiceAgent(stt=stt, tts=tts, llm=llm, config=config)
